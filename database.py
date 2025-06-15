@@ -1,6 +1,7 @@
 import os
 from dotenv import load_dotenv
-from motor.motor_asyncio import AsyncIOMotorClient
+from pymongo.mongo_client import MongoClient
+from pymongo.server_api import ServerApi
 
 # Load environment variables from .env file
 load_dotenv()
@@ -13,32 +14,35 @@ if not MONGO_CONNECTION_STRING:
 if not MONGO_DB_NAME:
     raise ValueError("MONGO_DB_NAME not found in .env file")
 
-client: AsyncIOMotorClient = None
+# Global variables to hold the client and database instance
+client: MongoClient = None
 db = None
 
-async def connect_to_mongo():
-    """Connects to MongoDB Atlas."""
+def connect_to_mongo():
+    """Connects to MongoDB Atlas using pymongo."""
     global client, db
     try:
-        client = AsyncIOMotorClient(MONGO_CONNECTION_STRING)
+        client = MongoClient(MONGO_CONNECTION_STRING, server_api=ServerApi('1'))
         db = client[MONGO_DB_NAME]
-        print(f"Connected to MongoDB database: {MONGO_DB_NAME}")
+        # Ping to confirm a successful connection
+        client.admin.command('ping')
+        print(f"Pinged your deployment. Successfully connected to MongoDB database: {MONGO_DB_NAME}!")
     except Exception as e:
         print(f"Could not connect to MongoDB: {e}")
-        # You might want to re-raise the exception or handle it differently
-        # depending on your application's error handling strategy.
+        # In a real application, you might want to exit or log a critical error
+        raise
 
-async def close_mongo_connection():
+def close_mongo_connection():
     """Closes the MongoDB connection."""
     global client
     if client:
         client.close()
         print("MongoDB connection closed.")
 
-# You can add a helper function for the collection if you have a specific one
 def get_collection(collection_name: str):
     """Returns a specific MongoDB collection."""
     if db:
         return db[collection_name]
     else:
-        raise ConnectionError("MongoDB not connected.")
+        # This error should ideally not be hit if startup event works correctly
+        raise ConnectionError("MongoDB not connected. Ensure connect_to_mongo was called.")
