@@ -39,10 +39,14 @@ def close_mongo_connection():
         client.close()
         print("MongoDB connection closed.")
 
-def get_collection(collection_name: str):
+def get_collection(collection_name: str = 'medic'):
     """Returns a specific MongoDB collection."""
-    if db:
+    if db is not None:
         return db[collection_name]
     else:
         # This error should ideally not be hit if startup event works correctly
         raise ConnectionError("MongoDB not connected. Ensure connect_to_mongo was called.")
+    
+    
+if __name__ == "__main__":
+    connect_to_mongo()

@@ -63,7 +63,7 @@ def dump_data_to_mongodb(message: str): # Changed to 'def' (synchronous)
     """
     try:
         # Get the collection (e.g., "dumped_data")
-        collection = get_collection("dumped_data")
+        collection = get_collection()
 
         # Create a Pydantic model instance for the data
         data_entry = DataToDump(message=message)
