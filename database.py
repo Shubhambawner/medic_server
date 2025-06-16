@@ -2,6 +2,15 @@ import os
 from dotenv import load_dotenv
 from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
+from pymongo import MongoClient
+from functools import lru_cache
+
+@lru_cache()
+def get_db():
+    client = MongoClient(MONGO_CONNECTION_STRING, server_api=ServerApi('1'))
+    db = client[MONGO_DB_NAME]
+    return db
+
 
 # Load environment variables from .env file
 load_dotenv()
@@ -40,13 +49,9 @@ def close_mongo_connection():
         print("MongoDB connection closed.")
 
 def get_collection(collection_name: str = 'medic'):
-    """Returns a specific MongoDB collection."""
-    if db is not None:
-        return db[collection_name]
-    else:
-        # This error should ideally not be hit if startup event works correctly
-        raise ConnectionError("MongoDB not connected. Ensure connect_to_mongo was called.")
-    
+    db = get_db()
+    return db[collection_name]
+   
     
 if __name__ == "__main__":
     connect_to_mongo()
